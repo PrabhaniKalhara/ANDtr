@@ -1,0 +1,33 @@
+@model ShareReviewViewModel
+@{ ViewData["Title"] = "Share review"; }
+<div class="page-heading"><a class="back-link" asp-controller="Reviews" asp-action="Details" asp-route-id="@Model.Review.ReviewId">← Back to review</a><p class="eyebrow">CONTROLLED CUSTOMER ACCESS</p><h1>Share review</h1><p>Choose a customer and the information they are allowed to see.</p></div>
+<div class="detail-grid share-grid">
+    <section class="panel"><h2>Share settings</h2><p class="muted">Review: <strong>@Model.Review.Title</strong></p>
+        <form asp-action="Share" method="post" class="form-stack">
+            <input type="hidden" name="Review.ReviewId" value="@Model.Review.ReviewId" />
+            <div asp-validation-summary="All" class="validation"></div>
+            <label for="CustomerId">Customer</label><select id="CustomerId" name="CustomerId" class="form-control" required><option value="">Choose a customer account</option>@foreach (var customer in Model.Customers) { <option value="@customer.Id" selected="@(Model.CustomerId == customer.Id)">@customer.FullName — @customer.Organization (@customer.Email)</option> }</select>
+            <h3>Information to share</h3>
+            <label class="check-row"><input asp-for="IncludeNoticeDetails" /> Safety / recall notice</label>
+            <label class="check-row"><input asp-for="IncludeRiskLevels" /> Risk level</label>
+            <label class="check-row"><input asp-for="IncludeFindings" /> Findings</label>
+            <label class="check-row"><input asp-for="IncludeRecommendations" /> Recommendations</label>
+            <label class="check-row"><input asp-for="IncludeInternalEmployeeComments" /> Internal employee comments</label>
+            <label class="check-row"><input asp-for="IncludeInternalCompanyNotes" /> Internal company notes</label>
+            <p class="muted small">The customer sees only the selected information. Internal employee comments and internal company notes are off by default; customers can add their own comments to shared notices.</p>
+            <div class="form-actions"><a class="btn btn-secondary" asp-controller="Reviews" asp-action="Details" asp-route-id="@Model.Review.ReviewId">Cancel</a><button type="submit" class="btn btn-primary">Share review</button></div>
+        </form>
+    </section>
+    <aside class="panel"><h3>Access history</h3>
+        @if (!Model.Review.Shares.Any()) { <p class="muted">This review has not been shared yet.</p> }
+        else
+        {
+            <div class="access-list">
+            @foreach (var share in Model.Review.Shares.OrderByDescending(s => s.SharedAt))
+            {
+                <div class="access-row"><div><strong>@share.Customer?.FullName</strong><p class="muted small">@share.Customer?.Email · Shared @share.SharedAt.ToLocalTime().ToString("dd MMM yyyy")</p><span class="status-chip @(share.IsActive ? "status-active" : "status-revoked")">@(share.IsActive ? "Active access" : "Revoked")</span></div>@if (share.IsActive) { <form asp-action="Revoke" method="post" onsubmit="return confirm('Revoke this customer access?');"><input type="hidden" name="id" value="@share.ShareId" /><button class="btn btn-danger-ghost btn-small" type="submit">Revoke</button></form> }</div>
+            }
+            </div>
+        }
+    </aside>
+</div>
