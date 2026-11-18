@@ -1,0 +1,20 @@
+@model ReviewListViewModel
+@{ ViewData["Title"] = Model.ShowArchived ? "Archived reviews" : "My reviews"; }
+<div class="page-heading heading-row"><div><p class="eyebrow">RISK ANALYSIS WORKSPACE</p><h1>@(Model.ShowArchived ? "Archived reviews" : "My reviews")</h1><p>Manage saved findings and return to previous risk analyses.</p></div><a class="btn btn-primary" asp-action="Create">＋ Create risk review</a></div>
+<section class="panel compact-panel">
+    <form method="get" class="toolbar-form"><input name="Search" value="@Model.Search" class="form-control" placeholder="Search review title or description" /><select name="SortBy" class="form-control"><option value="updated" selected="@(Model.SortBy == "updated")">Recently updated</option><option value="created" selected="@(Model.SortBy == "created")">Date created</option><option value="title" selected="@(Model.SortBy == "title")">Title</option><option value="items" selected="@(Model.SortBy == "items")">Number of notices</option></select><input type="hidden" name="ShowArchived" value="@Model.ShowArchived" /><button class="btn btn-secondary" type="submit">Apply</button></form>
+    <div class="tab-links"><a class="@(Model.ShowArchived ? "" : "active")" asp-action="Index">Active reviews</a><a class="@(Model.ShowArchived ? "active" : "")" asp-action="Index" asp-route-showArchived="true">Archived reviews</a></div>
+</section>
+@if (!Model.Reviews.Any())
+{
+    <div class="empty-state"><div class="empty-icon">▤</div><h3>No reviews found</h3><p>Create a risk review to collect safety notices, ratings and comments in one place.</p><a class="btn btn-primary" asp-action="Create">Create a review</a></div>
+}
+else
+{
+    <div class="review-grid">
+    @foreach (var review in Model.Reviews)
+    {
+        <article class="panel review-card"><div class="review-card-top"><span class="status-chip">@review.Status</span><span class="muted small">Updated @review.UpdatedAt.ToLocalTime().ToString("dd MMM yyyy")</span></div><h3><a asp-action="Details" asp-route-id="@review.ReviewId">@review.Title</a></h3><p>@(string.IsNullOrWhiteSpace(review.Description) ? "No description added." : review.Description)</p><div class="review-stats"><span><strong>@review.Items.Count</strong> notices</span><span>Created @review.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</span></div><div class="card-actions"><a class="btn btn-primary btn-small" asp-action="Details" asp-route-id="@review.ReviewId">Open review</a><a class="btn btn-secondary btn-small" asp-controller="Shares" asp-action="Share" asp-route-reviewId="@review.ReviewId">Share</a><form asp-action="Archive" method="post"><input type="hidden" name="id" value="@review.ReviewId" /><input type="hidden" name="archived" value="@(!Model.ShowArchived)" /><button class="btn btn-quiet btn-small" type="submit">@(Model.ShowArchived ? "Restore" : "Archive")</button></form></div></article>
+    }
+    </div>
+}
