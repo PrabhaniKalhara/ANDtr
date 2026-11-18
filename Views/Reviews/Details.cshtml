@@ -1,0 +1,31 @@
+@model ReviewDetailsViewModel
+@{ ViewData["Title"] = "Review details"; var review = Model.Review; var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier); }
+<div class="page-heading"><a class="back-link" asp-action="Index">← Back to my reviews</a><div class="heading-row"><div><p class="eyebrow">RISK REVIEW #@review.ReviewId</p><h1>@review.Title</h1><p>@review.Description</p></div><span class="status-chip">@review.Status</span></div></div>
+<div class="action-strip"><a class="btn btn-primary" asp-action="AddNotice" asp-route-id="@review.ReviewId">＋ Add notice</a><a class="btn btn-secondary" asp-controller="Shares" asp-action="Share" asp-route-reviewId="@review.ReviewId">Share review</a><a class="btn btn-secondary" asp-controller="Reports" asp-action="Download" asp-route-id="@review.ReviewId">Export PDF</a><form asp-action="Archive" method="post"><input type="hidden" name="id" value="@review.ReviewId" /><input type="hidden" name="archived" value="true" /><button type="submit" class="btn btn-quiet">Archive review</button></form></div>
+<div class="section-head"><h2>Selected safety notices <span class="count">@review.Items.Count</span></h2><span class="muted">Risk ratings are saved for this review only</span></div>
+@if (!review.Items.Any())
+{
+    <div class="empty-state"><h3>No notices added yet</h3><p>Search the notice dataset and add notices relevant to this review.</p><a class="btn btn-primary" asp-action="AddNotice" asp-route-id="@review.ReviewId">Add a notice</a></div>
+}
+else
+{
+    <div class="review-items">
+    @foreach (var item in review.Items.OrderBy(i => i.Notice?.NoticeNumber))
+    {
+        <article class="panel review-item">
+            <div class="item-heading"><div><p class="eyebrow">@item.Notice?.NoticeNumber · @(item.Notice?.DatePublished.ToString("dd MMM yyyy"))</p><h3><a asp-controller="Notices" asp-action="Details" asp-route-id="@item.NoticeId">@item.Notice?.Title</a></h3><div class="tag-row"><span>@item.Notice?.Manufacturer</span><span>@item.Notice?.DeviceType</span><span>@item.Notice?.SeverityClass</span></div></div><a class="btn btn-danger-ghost btn-small" asp-action="ConfirmRemove" asp-route-id="@item.ReviewNoticeId">Remove</a></div>
+            <div class="risk-row"><div><strong>Risk level</strong><p class="muted small">Assign a priority for this review</p></div><form asp-action="Rate" method="post" class="inline-form"><input type="hidden" name="reviewNoticeId" value="@item.ReviewNoticeId" /><select name="riskLevel" class="form-control form-control-small"><option selected="@(item.RiskLevel == "Not rated")">Not rated</option><option selected="@(item.RiskLevel == "Low")">Low</option><option selected="@(item.RiskLevel == "Medium")">Medium</option><option selected="@(item.RiskLevel == "High")">High</option></select><button type="submit" class="btn btn-secondary btn-small">Save rating</button></form></div>
+            <div class="comment-section"><h4>Comments <span class="count">@item.Comments.Count</span></h4>
+                @foreach (var comment in item.Comments.OrderBy(c => c.CreatedAt))
+                {
+                    <div class="comment"><div class="comment-head"><strong>@comment.Author?.FullName <span class="comment-type">· @comment.CommentType</span></strong><span class="muted small">@comment.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm") @if (comment.IsEdited) { <em>· edited @comment.UpdatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</em> }</span></div><p class="preline">@comment.CommentText</p>
+                        @if (comment.AuthorId == currentUserId && (User.IsInRole("Employee") || User.IsInRole("Admin")))
+                        { <div class="comment-actions"><a asp-action="EditComment" asp-route-id="@comment.CommentId">Edit</a><form asp-action="DeleteComment" method="post" onsubmit="return confirm('Delete your comment?');"><input type="hidden" name="id" value="@comment.CommentId" /><button type="submit" class="text-button danger-text">Delete</button></form></div> }
+                    </div>
+                }
+                <form asp-action="AddComment" method="post" class="comment-form"><input type="hidden" name="reviewNoticeId" value="@item.ReviewNoticeId" /><div class="comment-form-controls"><select name="commentType" class="form-control form-control-small" aria-label="Comment type"><option>Finding</option><option>Internal employee comment</option><option>Internal company note</option></select><textarea name="commentText" class="form-control" rows="2" maxlength="3000" placeholder="Add a finding or internal note..."></textarea></div><button class="btn btn-primary btn-small" type="submit">Post comment</button></form>
+            </div>
+        </article>
+    }
+    </div>
+}

@@ -1,0 +1,11 @@
+@model CreateReviewViewModel
+@{ ViewData["Title"] = "Create risk review"; }
+<div class="page-heading"><a class="back-link" asp-action="Index">← Back to my reviews</a><p class="eyebrow">NEW WORKSPACE</p><h1>Create a risk review</h1><p>Start a review and then add relevant safety notices from the notice dataset.</p></div>
+<div class="form-panel panel narrow-panel">
+    <form asp-action="Create" method="post" class="form-stack">
+        <div asp-validation-summary="ModelOnly" class="validation"></div>
+        <label asp-for="Title">Review name</label><input asp-for="Title" class="form-control" placeholder="e.g. Transformer Recall Review" /><span asp-validation-for="Title" class="validation"></span>
+        <label asp-for="Description">Description</label><textarea asp-for="Description" class="form-control" rows="5" placeholder="Describe the customer, device or purpose of this review"></textarea><span asp-validation-for="Description" class="validation"></span>
+        <div class="form-actions"><a class="btn btn-secondary" asp-action="Index">Cancel</a><button class="btn btn-primary" type="submit">Create review</button></div>
+    </form>
+</div>
